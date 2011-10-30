@@ -89,6 +89,7 @@ var flashEventHandlers = {
         setTimeout(function() {
             Microphone.log("Initialized and ready");
             Microphone.flash.__setDebug(Microphone.debug);
+            Microphone.flash.__initialize();
             for (var i = 0; i < Microphone.readyHandlers.length; i++) {
                 readyHandlers[i]();
             }

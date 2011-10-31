@@ -45,7 +45,6 @@ public class MicrophoneMain extends Sprite {
         ExternalInterface.addCallback("__disable", disable);
         ExternalInterface.addCallback("__receiveFrames", receiveFrames);
         ExternalInterface.addCallback("__setDebug", setDebug);
-        ExternalInterface.addCallback("__test", test);
 
         invoke("__onFlashInitialized");
     }

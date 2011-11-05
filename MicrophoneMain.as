@@ -54,9 +54,10 @@ public class MicrophoneMain extends Sprite {
             invoke("__onLog", "No microphones detected.");
             return;
         }
-        mic = Microphone.getMicrophone();
-        mic.gain = 100;
+        mic = Microphone["getEnhancedMicrophone"]();
+        mic.gain = 50;
         mic.rate = 44;
+        mic.setSilenceLevel(0);
     }
 
     private function enable():void {

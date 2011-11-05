@@ -77,7 +77,7 @@ public class MicrophoneMain extends Sprite {
         var samples:ByteArray = new ByteArray();
         data.position = 0;
         while (data.bytesAvailable) {
-            var val:int = (1 + data.readFloat()) * 27647;
+            var val:int = (data.readFloat() * 27647) + 27647;
             if (val == 0 || val == 92 || val == 8232 || val == 8233) {
                 val += 2;
             }

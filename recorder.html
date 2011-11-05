@@ -1,0 +1,127 @@
+<!doctype html>
+<html><head>
+    <title>Recorder</title>
+    <script src="pcm.js"></script>
+    <script src="ulaw.js"></script>
+    <script src="swfobject.js"></script>
+    <script src="microphone.js"></script>
+    <style>
+        #levels {
+            width: 20px;
+            height: 200px;
+            background: #bf2f2f;
+            background: -moz-linear-gradient(top, #bf2f2f 0%, #f2a318 11%,
+                #dbe05c 22%, #4fad56 100%);
+            background: -webkit-gradient(linear, left top, left bottom,
+                color-stop(0%, #bf2f2f), color-stop(11%, #f2a318),
+                color-stop(22%, #dbe05c), color-stop(100%, #4fad56));
+            background: -webkit-linear-gradient(top, #bf2f2f 0%, #f2a318 11%,
+                #dbe05c 22%, #4fad56 100%);
+            background: -o-linear-gradient(top, #bf2f2f 0%, #f2a318 11%,
+                #dbe05c 22%, #4fad56 100%);
+            background: -ms-linear-gradient(top, #bf2f2f 0%, #f2a318 11%,
+                #dbe05c 22%, #4fad56 100%);
+            background: linear-gradient(top, #bf2f2f 0%, #f2a318 11%,
+                #dbe05c 22%, #4fad56 100%);
+            filter: progid:DXImageTransform.Microsoft.gradient(
+                startColorstr='#bf2f2f', endColorstr='#4fad56', GradientType=0);
+        }
+        #levels-mask {
+            height: 100%;
+            width: 100%;
+            background-color: white;
+        }
+        #canvas {
+            border: 1px solid black;
+        }
+    </style>
+    <script>
+        var recordingFrames = [], recording = false, rawFrames = [];
+        Microphone.debug = true;
+        Microphone.initialize();
+        Microphone.onready(function(){
+            var levelsMask = document.getElementById("levels-mask");
+            var offset = document.getElementById("offset");
+            Microphone.enable();
+            Microphone.ondata(function(frame){
+                var max = 0, min = 65535, shorts = [];
+                if (recording) {
+                    rawFrames.push(frame);
+                }
+                for (var i = 0; i < frame.length; i++) {
+                    var sample = frame.charCodeAt(i);
+                    max = Math.max(max, sample);
+                    min = Math.min(min, sample);
+                    //if (recording) {
+                    //    var sample = frame.charCodeAt(i);
+                    //    var short = String.fromCharCode(255 & sample,
+                    //                                    255 & sample >> 8);
+                    //    shorts.push(short);
+                    //}
+                }
+                //if (recording) {
+                //    recordingFrames.push(shorts.join(""));
+                //}
+                var value = max - min;
+                var ratio = value / 55294;
+                var logScaled = Math.log(1 + (ratio * 100)) * 21.67;
+                levelsMask.style.height = parseInt(100 - logScaled) + "%";
+                offset.innerHTML = "" + logScaled;
+            });
+        });
+        function play() {
+            var samples = rawFrames.join("");
+            var codes = [];
+            var bytes = [];
+            for (var i = 0; i < samples.length; i++) {
+                var sample = (samples.charCodeAt(i) - 27647) * 1.18;
+                sample = MuLaw.decode(MuLaw.encode(sample));
+                var short = String.fromCharCode(255 & (sample),
+                                                255 & (sample >> 8));
+                bytes.push(short);
+            }
+            bytes = bytes.join("");
+            //console.log(codes);
+            //console.log("Playing " + bytes.length + " bytes");
+            //console.log(btoa(PCM.encode(bytes)));
+            PCM.play(bytes);
+        }
+        function plot() {
+            var canvas = document.getElementById("canvas"),
+                ctx = canvas.getContext("2d"),
+                zero = parseInt(canvas.height / 2),
+                //samples = recordingFrames.join("");
+                samples = rawFrames.join("");
+            ctx.beginPath();
+            ctx.moveTo(0, zero);
+            var yScale = canvas.height / 55294;
+            var xScale = samples.length / canvas.width;
+            //for (var i = 0; i < samples.length / 2; i++) {
+            //    if (i >= canvas.width) break;
+            //    var short = samples.charCodeAt(i) + (samples.charCodeAt(i + 1) << 8);
+            //    ctx.lineTo(i, short * scale);
+            //}
+            console.log("Plotting " + samples.length + " samples");
+            var ticks = [];
+            for (var i = 0; i < canvas.width; i++) {
+                var sample = samples.charCodeAt(parseInt(i * xScale));
+                sample = MuLaw.decode(MuLaw.encode(sample));
+                ctx.lineTo(i, sample * yScale);
+                ticks.push(sample);
+            }
+            ctx.stroke();
+            //console.log(ticks);
+        }
+        function toggleRecord() {
+            recording = !recording;
+        }
+    </script>
+</head><body>
+<h1>Recorder</h1>
+<a href="javascript:void(0)" onclick="toggleRecord()">Record</a>
+<a href="javascript:void(0)" onclick="play()">Play</a>
+<a href="javascript:void(0)" onclick="plot()">Plot</a>
+<div id="levels"><div id="levels-mask"></div></div>
+<div id="offset"></div>
+<canvas id="canvas" width="800" height="150"></canvas>
+</body></html>

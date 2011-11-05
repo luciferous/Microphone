@@ -91,7 +91,7 @@ var flashEventHandlers = {
             Microphone.flash.__setDebug(Microphone.debug);
             Microphone.flash.__initialize();
             for (var i = 0; i < Microphone.readyHandlers.length; i++) {
-                readyHandlers[i]();
+                Microphone.readyHandlers[i]();
             }
         }, 0);
     },

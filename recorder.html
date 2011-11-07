@@ -86,31 +86,22 @@
             //console.log(btoa(PCM.encode(bytes)));
             PCM.play(bytes);
         }
-        function plot() {
-            var canvas = document.getElementById("canvas"),
-                ctx = canvas.getContext("2d"),
-                zero = parseInt(canvas.height / 2),
-                //samples = recordingFrames.join("");
-                samples = rawFrames.join("");
+        function plot(canvas, samples, min, max) {
+            if (typeof min == "undefined") min = Math.min.apply(Math, samples);
+            if (typeof max == "undefined") max = Math.max.apply(Math, samples);
+            var ctx = canvas.getContext("2d"),
+                yRange = max - min,
+                zeroOffset = max - (yRange / 2),
+                yScale = canvas.height / yRange,
+                xScale = samples.length / canvas.width;
             ctx.beginPath();
-            ctx.moveTo(0, zero);
-            var yScale = canvas.height / 55294;
-            var xScale = samples.length / canvas.width;
-            //for (var i = 0; i < samples.length / 2; i++) {
-            //    if (i >= canvas.width) break;
-            //    var short = samples.charCodeAt(i) + (samples.charCodeAt(i + 1) << 8);
-            //    ctx.lineTo(i, short * scale);
-            //}
-            console.log("Plotting " + samples.length + " samples");
-            var ticks = [];
+            ctx.moveTo(0, parseInt(canvas.height / 2));
             for (var i = 0; i < canvas.width; i++) {
                 var sample = samples.charCodeAt(parseInt(i * xScale));
-                sample = MuLaw.decode(MuLaw.encode(sample));
-                ctx.lineTo(i, sample * yScale);
-                ticks.push(sample);
+                var y = yScale * (sample - zeroOffset) + (zeroOffset * yScale);
+                ctx.lineTo(i, y);
             }
             ctx.stroke();
-            //console.log(ticks);
         }
         function toggleRecord() {
             recording = !recording;
@@ -120,7 +111,7 @@
 <h1>Recorder</h1>
 <a href="javascript:void(0)" onclick="toggleRecord()">Record</a>
 <a href="javascript:void(0)" onclick="play()">Play</a>
-<a href="javascript:void(0)" onclick="plot()">Plot</a>
+<a href="javascript:void(0)" onclick="plot(document.getElementById('canvas'), rawFrames.join(''), 0, 55294)">Plot</a>
 <div id="levels"><div id="levels-mask"></div></div>
 <div id="offset"></div>
 <canvas id="canvas" width="800" height="150"></canvas>
